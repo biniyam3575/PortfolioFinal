@@ -78,7 +78,7 @@ const Skills = () => {
       id="skills"
       className="min-h-screen w-full 
         bg-white dark:bg-black 
-        relative flex flex-col items-center justify-center py-20 overflow-hidden
+        relative flex flex-col items-center justify-center py-10 overflow-hidden
         transition-colors duration-500"
     >
       <div className="w-full max-w-7xl mx-auto px-10 md:px-24 mb-12 text-left">

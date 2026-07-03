@@ -19,7 +19,7 @@ const ValueSection = () => {
       id="values"
       className="w-full 
         bg-white dark:bg-black 
-        py-20 px-6 md:px-16 lg:px-28 
+        py-10 px-6 md:px-16 lg:px-28 
         border-t border-black/5 dark:border-white/5
         transition-colors duration-500"
     >
@@ -64,7 +64,7 @@ const ValueSection = () => {
         </div>
 
         {/* FOOTER NOTE */}
-        <div className="mt-16 flex flex-col md:flex-row items-center gap-6 opacity-60">
+        <div className="mt-2 flex flex-col md:flex-row items-center gap-6 opacity-60">
           <div className="h-[1px] flex-1 bg-gradient-to-r from-[#822cff] to-transparent"></div>
           <p className="text-[9px] font-mono uppercase tracking-[0.4em] text-gray-500 dark:text-gray-400">
             Reliability by Design

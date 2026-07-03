@@ -72,14 +72,14 @@ const Featured = () => {
       </div>
 
       {/* Indicators */}
-      <div className="flex items-center gap-3 mt-5">
+      <div className="flex items-center gap-3 -mt-28 pt-0">
         {projectData.map((_, i) => (
           <div
             key={i}
-            className="h-[3px] rounded-full overflow-hidden"
+            className="h-[4px] rounded-full overflow-hidden"
             style={{
               width: activeIndex === i ? "50px" : "12px",
-              background: activeIndex === i ? "#822cff" : (document.documentElement.classList.contains('dark') ? "#222" : "#ddd"),
+              background: activeIndex === i ? "#822cff" : (document.documentElement.classList.contains('dark') ? "#5a5757" : "#ddd"),
               transition: "0.35s",
             }}
           />

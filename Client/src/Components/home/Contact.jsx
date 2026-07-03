@@ -38,7 +38,7 @@ const Contact = () => {
       id="contact"
       className="min-h-screen 
         bg-white dark:bg-black 
-        py-32 px-10 md:px-24 
+        py-16 px-10 md:px-24 
         border-t border-black/5 dark:border-white/5
         transition-colors duration-500"
     >

@@ -19,7 +19,7 @@ const TimelineSection = () => {
       id="journey"
       className="w-full 
         bg-white dark:bg-black 
-        py-20 md:py-32 px-4 md:px-16 lg:px-28 overflow-hidden
+        py-10 md:py-32 px-4 md:px-16 lg:px-28 overflow-hidden
         transition-colors duration-500"
     >
       <div className="max-w-[1600px] mx-auto w-full">
@@ -35,7 +35,7 @@ const TimelineSection = () => {
         </div>
 
         {/* TIMELINE VIEWPORT */}
-        <div className="relative pt-10 pb-20">
+        <div className="relative pt-10 pb-10">
           <div className="no-scrollbar overflow-x-auto flex items-start pb-10 cursor-grab active:cursor-grabbing scroll-smooth">
             <div className="relative flex items-start">
               

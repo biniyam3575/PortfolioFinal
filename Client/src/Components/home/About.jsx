@@ -29,7 +29,7 @@ const About = () => {
       id="about"
       className="min-h-screen w-full 
         bg-white dark:bg-black 
-        py-32 px-6 md:px-16 lg:px-28 flex items-center
+        py-10 px-6 md:px-16 lg:px-28 flex items-center
         transition-colors duration-500"
     >
       <div className="max-w-[1600px] mx-auto w-full flex flex-col lg:flex-row gap-20 items-stretch">

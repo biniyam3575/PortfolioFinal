@@ -12,7 +12,9 @@ import {
   RiArrowLeftLine,
   RiShieldFlashLine,
   RiHistoryLine,
-  RiHandCoinLine
+  RiHandCoinLine,
+  RiMenu2Line,
+  RiCloseLine
 } from 'react-icons/ri';
 
 // Import your manager components
@@ -29,6 +31,7 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [clickCount, setClickCount] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   // AUTH OBSERVER
@@ -58,39 +61,63 @@ const Dashboard = () => {
     signOut(auth).then(() => navigate('/'));
   };
 
+  // Helper to handle tab changes on mobile
+  const handleTabSelect = (tab) => {
+    setActiveTab(tab);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    /* 
-      CRITICAL FIX: 'fixed inset-0' locks the dashboard to the screen edges.
-      'overflow-hidden' prevents the browser from showing a scrollbar for the background.
-    */
     <div className="fixed inset-0 flex w-full bg-[#050505] text-white font-sans overflow-hidden z-[9999]">
       
-      {/* SIDEBAR - Locked to 100% height */}
-      <aside className="w-64 border-r border-white/10 bg-[#0a0a0a] flex flex-col p-6 shrink-0 h-full overflow-hidden">
-        
-        {/* LOGO AREA */}
+      {/* MOBILE BACKDROP DRAWER OVERLAY */}
+      {isMobileMenuOpen && (
         <div 
-          onClick={handleSecretClick}
-          className="flex items-center gap-3 mb-12 px-2 cursor-default select-none active:opacity-70 transition-opacity"
-          title="System Core"
-        >
-          <div className="w-8 h-8 border-2 border-[#822cff] rotate-45 flex items-center justify-center">
-            <span className="text-white font-black italic text-xs -rotate-45">B</span>
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR - Persistent on desktop, sliding drawer on mobile */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 border-r border-white/10 bg-[#0a0a0a] flex flex-col p-6 shrink-0 h-full overflow-hidden transition-transform duration-300 ease-in-out
+        lg:relative lg:transform-none
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        
+        {/* LOGO AREA & CLOSE BUTTON */}
+        <div className="flex items-center justify-between mb-12 px-2">
+          <div 
+            onClick={handleSecretClick}
+            className="flex items-center gap-3 cursor-default select-none active:opacity-70 transition-opacity"
+            title="System Core"
+          >
+            <div className="w-8 h-8 border-2 border-[#822cff] rotate-45 flex items-center justify-center">
+              <span className="text-white font-black italic text-xs -rotate-45">B</span>
+            </div>
+            <span className="text-sm font-bold tracking-[0.2em] uppercase text-white">
+              Control Center
+            </span>
           </div>
-          <span className="text-sm font-bold tracking-[0.2em] uppercase text-white">
-            Control Center
-          </span>
+
+          {/* Close button inside sidebar for mobile view */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="p-1 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white lg:hidden transition-colors"
+          >
+            <RiCloseLine size={24} />
+          </button>
         </div>
 
         {/* NAVIGATION - Independent Scroll */}
         <nav className="flex-1 space-y-2 overflow-y-auto no-scrollbar pr-1">
-          <SidebarItem icon={<RiLayoutMasonryLine />} label="Projects" active={activeTab === 'projects'} onClick={() => setActiveTab('projects')} />
-          <SidebarItem icon={<RiCodeSSlashLine />} label="Skills" active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} />
-          <SidebarItem icon={<RiHistoryLine />} label="Timeline" active={activeTab === 'timeline'} onClick={() => setActiveTab('timeline')} />
-          <SidebarItem icon={<RiHandCoinLine />} label="What You Get" active={activeTab === 'values'} onClick={() => setActiveTab('values')} />
-          <SidebarItem icon={<RiChatQuoteLine />} label="Testimonials" active={activeTab === 'testimonials'} onClick={() => setActiveTab('testimonials')} />
-          <SidebarItem icon={<RiUserSettingsLine />} label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
-          <SidebarItem icon={<RiInformationLine />} label="About" active={activeTab === 'about'} onClick={() => setActiveTab('about')} />
+          <SidebarItem icon={<RiLayoutMasonryLine />} label="Projects" active={activeTab === 'projects'} onClick={() => handleTabSelect('projects')} />
+          <SidebarItem icon={<RiCodeSSlashLine />} label="Skills" active={activeTab === 'skills'} onClick={() => handleTabSelect('skills')} />
+          <SidebarItem icon={<RiHistoryLine />} label="Timeline" active={activeTab === 'timeline'} onClick={() => handleTabSelect('timeline')} />
+          <SidebarItem icon={<RiHandCoinLine />} label="What You Get" active={activeTab === 'values'} onClick={() => handleTabSelect('values')} />
+          <SidebarItem icon={<RiChatQuoteLine />} label="Testimonials" active={activeTab === 'testimonials'} onClick={() => handleTabSelect('testimonials')} />
+          <SidebarItem icon={<RiUserSettingsLine />} label="Profile" active={activeTab === 'profile'} onClick={() => handleTabSelect('profile')} />
+          <SidebarItem icon={<RiInformationLine />} label="About" active={activeTab === 'about'} onClick={() => handleTabSelect('about')} />
         </nav>
 
         {/* FOOTER ACTIONS */}
@@ -110,33 +137,44 @@ const Dashboard = () => {
       {/* MAIN VIEWPORT - Flex column to separate header from scrollable stage */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#050505]">
         
-        {/* FIXED HEADER - Remains at top */}
-        <header className="flex justify-between items-start p-8 md:p-12 pb-6 shrink-0 bg-[#050505] z-20">
-          <div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter text-white flex items-center gap-3">
-              {activeTab} <span className="text-gray-700 font-light italic">/ Manager</span>
-            </h1>
-            
-            {/* STATUS INDICATOR */}
-            <div className="flex items-center gap-2 mt-3 px-3 py-1.5 bg-white/[0.03] border border-white/5 rounded-full w-fit">
-              <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-amber-500'} animate-pulse`}></div>
-              <p className="text-gray-500 text-[9px] uppercase tracking-[0.2em] font-black">
-                {isAdmin ? `ROOT_ACCESS: ${user?.email}` : "READ_ONLY_ACCESS"}
-              </p>
+        {/* FIXED HEADER - Remains at top, responsive padding and structure */}
+        <header className="flex items-center justify-between p-6 md:p-8 lg:p-12 pb-6 shrink-0 bg-[#050505] z-20 gap-4">
+          <div className="flex items-center gap-4">
+            {/* Hamburger button for mobile layouts */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 bg-white/5 border border-white/10 rounded-xl lg:hidden text-gray-400 hover:text-white transition-colors"
+            >
+              <RiMenu2Line size={20} />
+            </button>
+
+            <div>
+              <h1 className="text-xl md:text-3xl font-black uppercase tracking-tighter text-white flex items-center gap-2 md:gap-3">
+                {activeTab} <span className="text-gray-700 font-light italic text-xs md:text-xl">/ Manager</span>
+              </h1>
+              
+              {/* STATUS INDICATOR */}
+              <div className="flex items-center gap-2 mt-2 px-2.5 py-1 bg-white/[0.03] border border-white/5 rounded-full w-fit">
+                <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-amber-500'} animate-pulse`}></div>
+                <p className="text-gray-500 text-[8px] md:text-[9px] uppercase tracking-[0.2em] font-black truncate max-w-[140px] md:max-w-none">
+                  {isAdmin ? `ROOT_ACCESS: ${user?.email}` : "READ_ONLY_ACCESS"}
+                </p>
+              </div>
             </div>
           </div>
 
           <Link 
             to="/" 
-            className="group flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-[#822cff] hover:border-[#822cff] transition-all duration-500"
+            className="group flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-[#822cff] hover:border-[#822cff] transition-all duration-500 whitespace-nowrap"
           >
               <RiArrowLeftLine className="text-gray-400 group-hover:text-white transition-colors" />
-              <span className="text-[10px] font-black tracking-widest text-gray-400 group-hover:text-white uppercase">Back to Portfolio</span>
+              <span className="text-[9px] md:text-[10px] font-black tracking-widest text-gray-400 group-hover:text-white uppercase hidden sm:inline">Back to Portfolio</span>
+              <span className="text-[9px] font-black tracking-widest text-gray-400 group-hover:text-white uppercase sm:hidden">Exit</span>
           </Link>
         </header>
 
-        {/* SCROLLABLE CONTENT STAGE - The only scrolling part of the UI */}
-        <div className="flex-1 overflow-y-auto px-8 md:px-12 pb-24 custom-scrollbar">
+        {/* SCROLLABLE CONTENT STAGE - Dynamic padding for mobile optimization */}
+        <div className="flex-1 overflow-y-auto px-6 md:px-8 lg:px-12 pb-24 custom-scrollbar">
           <div className="max-w-6xl mx-auto">
             {activeTab === 'projects' && <ProjectManager isAdmin={isAdmin} />}
             {activeTab === 'profile' && <ProfileManager isAdmin={isAdmin} />}
@@ -149,9 +187,9 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* SECURITY OVERLAY */}
+      {/* SECURITY OVERLAY - Placed defensively out of the way on smaller mobile screens */}
       {!isAdmin && (
-        <div className="fixed bottom-6 right-6 p-4 bg-black/80 backdrop-blur-md border border-white/5 rounded-2xl flex items-center gap-3 opacity-40 hover:opacity-100 transition-opacity z-50">
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 p-3 md:p-4 bg-black/80 backdrop-blur-md border border-white/5 rounded-2xl flex items-center gap-3 opacity-40 hover:opacity-100 transition-opacity z-50 pointer-events-none sm:pointer-events-auto">
           <RiShieldFlashLine className="text-[#822cff]" />
           <span className="text-[8px] font-bold uppercase tracking-widest text-gray-500">Encrypted Dashboard</span>
         </div>
