@@ -12,7 +12,9 @@ import {
   RiQuillPenFill,
   RiSparklingFill,
   RiAddLine,
-  RiCloseLine
+  RiCloseLine,
+  RiFileTextLine,
+  RiUploadLine
 } from 'react-icons/ri';
 
 const ProfileManager = ({ isAdmin }) => {
@@ -20,9 +22,11 @@ const ProfileManager = ({ isAdmin }) => {
     name: '', 
     bio: '', 
     imageUrl: '',
+    resumeUrl: '',
     roles: []
   });
   const [newImage, setNewImage] = useState(null);
+  const [newResume, setNewResume] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -33,6 +37,7 @@ const ProfileManager = ({ isAdmin }) => {
           name: data.name || '',
           bio: data.bio || '',
           imageUrl: data.imageUrl || '',
+          resumeUrl: data.resumeUrl || '',
           roles: Array.isArray(data.roles) ? data.roles : []
         });
       }
@@ -61,7 +66,9 @@ const ProfileManager = ({ isAdmin }) => {
     setLoading(true);
     try {
       let url = profile.imageUrl;
+      let resumeUrl = profile.resumeUrl;
 
+      // Avatar upload
       if (newImage) {
         const data = new FormData();
         data.append("file", newImage);
@@ -74,16 +81,32 @@ const ProfileManager = ({ isAdmin }) => {
         url = file.secure_url;
       }
 
+      // Resume upload (PDF stored as an image-type resource so fl_attachment works)
+      if (newResume) {
+        const data = new FormData();
+        data.append("file", newResume);
+        data.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, 
+          { method: "POST", body: data }
+        );
+        const file = await res.json();
+        if (!file.secure_url) throw new Error(file.error?.message || "Resume upload failed");
+        resumeUrl = file.secure_url;
+      }
+
       // Drop empty/blank role entries before saving
       const cleanRoles = profile.roles.map(r => r.trim()).filter(Boolean);
 
       await setDoc(doc(db, "settings", "profile"), { 
         ...profile, 
         roles: cleanRoles,
-        imageUrl: url 
+        imageUrl: url,
+        resumeUrl
       }, { merge: true });
 
       setNewImage(null);
+      setNewResume(null);
     } catch (err) { 
       alert("Sync Error: " + err.message); 
     }
@@ -132,7 +155,7 @@ const ProfileManager = ({ isAdmin }) => {
                 {isAdmin && (
                   <label className="absolute -bottom-4 -right-4 bg-[#822cff] p-5 rounded-[1.5rem] cursor-pointer hover:bg-black hover:scale-110 transition-all shadow-xl border-4 border-white">
                     <RiImageEditLine className="text-white text-2xl" />
-                    <input type="file" className="hidden" onChange={(e) => setNewImage(e.target.files[0])} />
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setNewImage(e.target.files[0])} />
                   </label>
                 )}
              </div>
@@ -223,6 +246,52 @@ const ProfileManager = ({ isAdmin }) => {
                 <RiAddLine className="text-base" /> Add Role
               </button>
             )}
+          </div>
+
+          {/* Resume Upload Section */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest flex items-center gap-2">
+              <RiFileTextLine className="text-[#822cff]" /> Resume (PDF)
+            </label>
+
+            <div className="flex items-center gap-3">
+              <div className={`flex-1 border-2 rounded-2xl p-4 text-sm font-bold truncate ${
+                isAdmin ? 'bg-gray-50 border-gray-100' : 'bg-gray-100 border-transparent'
+              } ${newResume || profile.resumeUrl ? 'text-black' : 'text-gray-300'}`}>
+                {newResume
+                  ? `${newResume.name} (ready to upload)`
+                  : profile.resumeUrl
+                    ? 'Resume uploaded ✓'
+                    : 'No resume uploaded'}
+              </div>
+
+              {profile.resumeUrl && (
+                <a
+                  href={profile.resumeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-4 rounded-2xl bg-gray-100 text-gray-500 hover:bg-black hover:text-white transition-all"
+                  title="Preview current resume"
+                >
+                  <RiEyeLine className="text-lg" />
+                </a>
+              )}
+
+              {isAdmin && (
+                <label
+                  className="p-4 rounded-2xl bg-[#822cff] text-white cursor-pointer hover:bg-black transition-all"
+                  title="Choose a PDF"
+                >
+                  <RiUploadLine className="text-lg" />
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => setNewResume(e.target.files[0] || null)}
+                  />
+                </label>
+              )}
+            </div>
           </div>
 
           {/* Action Button */}

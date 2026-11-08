@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { RiDownloadLine, RiSettings4Line, RiSunLine, RiMoonLine } from 'react-icons/ri'; 
 import { db } from '../../admin/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext'; // adjust path as needed
 
@@ -14,10 +14,45 @@ const AbstractLogo = () => (
   </div>
 );
 
+// Triggers a direct download without opening a new tab.
+// PDFs uploaded as Cloudinary "image" resources support the fl_attachment flag,
+// which makes the server send the file as a download.
+const downloadResume = async (url) => {
+  const triggerDownload = (href) => {
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = 'Biniyam_Resume.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  // Preferred path: image-type upload + fl_attachment (no tab, no fetch)
+  if (url.includes('/image/upload/')) {
+    triggerDownload(url.replace('/image/upload/', '/image/upload/fl_attachment:Biniyam_Resume/'));
+    return;
+  }
+
+  // Older raw uploads: fetch as blob and save locally
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Download failed (${res.status})`);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+    triggerDownload(blobUrl);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  } catch (err) {
+    console.error(err);
+    window.open(url, '_blank', 'noopener'); // last resort
+  }
+};
+
 const Navbar = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [hasTestimonials, setHasTestimonials] = useState(false);
   const [hasValues, setHasValues] = useState(false);
+  const [resumeUrl, setResumeUrl] = useState('');
+  const [downloading, setDownloading] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -27,7 +62,10 @@ const Navbar = () => {
     const unsubValues = onSnapshot(collection(db, "values"), (snapshot) => {
       setHasValues(!snapshot.empty);
     });
-    return () => { unsubTest(); unsubValues(); };
+    const unsubProfile = onSnapshot(doc(db, "settings", "profile"), (snap) => {
+      if (snap.exists()) setResumeUrl(snap.data().resumeUrl || '');
+    });
+    return () => { unsubTest(); unsubValues(); unsubProfile(); };
   }, []);
 
   const navLinks = [
@@ -52,6 +90,13 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [activeSection]);
+
+  const handleResumeClick = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    await downloadResume(resumeUrl);
+    setDownloading(false);
+  };
 
   return (
     <motion.nav 
@@ -129,12 +174,20 @@ const Navbar = () => {
             </span>
           </Link>
 
-          <button className="flex items-center gap-2 px-6 py-2 bg-transparent border border-[#822cff]/40 
-            text-black dark:text-white text-[10px] font-black rounded-full 
-            hover:bg-[#822cff] hover:text-white hover:border-[#822cff] 
-            transition-all shadow-[0_0_15px_rgba(130,44,255,0.1)] active:scale-95">
-            RESUME <RiDownloadLine size={14} />
-          </button>
+          {/* Resume download: only shown once a resume has been uploaded */}
+          {resumeUrl && (
+            <button
+              onClick={handleResumeClick}
+              disabled={downloading}
+              className="flex items-center gap-2 px-6 py-2 bg-transparent border border-[#822cff]/40 
+                text-black dark:text-white text-[10px] font-black rounded-full 
+                hover:bg-[#822cff] hover:text-white hover:border-[#822cff] 
+                transition-all shadow-[0_0_15px_rgba(130,44,255,0.1)] active:scale-95 
+                disabled:opacity-60 disabled:cursor-wait"
+            >
+              {downloading ? 'DOWNLOADING...' : 'RESUME'} <RiDownloadLine size={14} />
+            </button>
+          )}
         </div>
       </div>
     </motion.nav>
